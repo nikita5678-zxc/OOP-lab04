@@ -5,93 +5,56 @@
 
 #include <iostream>
 #include <memory>
-#include <string>
-
-using namespace std;
 
 int main() {
     Array<std::shared_ptr<Figure<double>>> figures;
-    string command;
 
-    cout << "Программа для работы с фигурами\n";
-    cout << "Доступные команды:\n";
-    cout << "  add <тип>   — добавить фигуру (triangle, hexagon, octagon)\n";
-    cout << "  list        — показать все фигуры\n";
-    cout << "  area        — посчитать общую площадь\n";
-    cout << "  remove <n>  — удалить фигуру под номером n\n";
-    cout << "  quit        — выйти\n\n";
+    auto tri = std::make_shared<Triangle<double>>(
+        Point<double>(0, 0), Point<double>(1, 0)
+    );
+    figures.add(std::move(tri));
 
-    while (cin >> command) {
-        if (command == "quit") {
-            break;
-        }
+    auto hex = std::make_shared<Hexagon<double>>(
+        Point<double>(3, 0), Point<double>(4, 0)
+    );
+    figures.add(std::move(hex));
 
-        else if (command == "add") {
-            string type;
-            cin >> type;
+    auto oct = std::make_shared<Octagon<double>>(
+        Point<double>(0, 3), Point<double>(1, 3)
+    );
+    figures.add(std::move(oct));
 
-            if (type != "triangle" && type != "hexagon" && type != "octagon") {
-                cout << "Неизвестный тип фигуры\n";
-                continue;
-            }
-
-            double cx, cy, vx, vy;
-            cout << "Введите координаты центра (x y): ";
-            cin >> cx >> cy;
-            cout << "Введите координаты одной вершины (x y): ";
-            cin >> vx >> vy;
-
-            if (type == "triangle") {
-                figures.add(std::make_shared<Triangle<double>>(
-                    Point<double>(cx, cy), Point<double>(vx, vy)
-                ));
-            } else if (type == "hexagon") {
-                figures.add(std::make_shared<Hexagon<double>>(
-                    Point<double>(cx, cy), Point<double>(vx, vy)
-                ));
-            } else if (type == "octagon") {
-                figures.add(std::make_shared<Octagon<double>>(
-                    Point<double>(cx, cy), Point<double>(vx, vy)
-                ));
-            }
-
-            cout << "Фигура добавлена\n";
-        }
-
-        else if (command == "list") {
-            if (figures.getSize() == 0) {
-                cout << "Нет фигур\n";
-                continue;
-            }
-
-            for (size_t i = 0; i < figures.getSize(); ++i) {
-                cout << "Фигура " << i << ":\n";
-                cout << *figures[i] << "\n";
-                cout << "Центр: " << figures[i]->Center() << "\n";
-                cout << "Площадь: " << static_cast<double>(*figures[i]) << "\n\n";
-            }
-        }
-
-        else if (command == "area") {
-            cout << "Общая площадь: " << figures.totalArea() << "\n";
-        }
-
-        else if (command == "remove") {
-            size_t index;
-            cin >> index;
-            if (index >= figures.getSize()) {
-                cout << "Неверный номер фигуры\n";
-            } else {
-                figures.remove(index);
-                cout << "Фигура удалена\n";
-            }
-        }
-
-        else {
-            cout << "Неизвестная команда\n";
-        }
+    for (size_t i = 0; i < figures.getSize(); ++i) {
+        std::cout << "Figure " << i << ":\n";
+        std::cout << *figures[i] << "\n";
+        std::cout << "Center: " << figures[i]->Center() << "\n";
+        std::cout << "Area: " << static_cast<double>(*figures[i]) << "\n\n";
     }
 
-    cout << "программа завершена\n";
+    std::cout << "Total area: " << figures.totalArea() << "\n\n";
+
+    figures.remove(1);
+
+    std::cout << "After removing index 1:\n";
+    for (size_t i = 0; i < figures.getSize(); ++i) {
+        std::cout << "Figure " << i << ":\n";
+        std::cout << *figures[i] << "\n";
+        std::cout << "Area: " << static_cast<double>(*figures[i]) << "\n\n";
+    }
+
+    Array<std::shared_ptr<Octagon<int>>> octagons;
+    octagons.add(std::make_shared<Octagon<int>>(
+        Point<int>(0, 0), Point<int>(2, 0)
+    ));
+    octagons.add(std::make_shared<Octagon<int>>(
+        Point<int>(5, 5), Point<int>(7, 5)
+    ));
+
+    std::cout << "Integer octagons:\n";
+    for (size_t i = 0; i < octagons.getSize(); ++i) {
+        std::cout << *octagons[i] << "\n";
+        std::cout << "Area: " << static_cast<double>(*octagons[i]) << "\n";
+    }
+
     return 0;
 }
