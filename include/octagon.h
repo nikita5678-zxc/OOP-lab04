@@ -3,7 +3,6 @@
 #include "figure.h"
 #include <array>
 #include <cmath>
-#include <numbers>
 #include <iostream>
 
 template <Scalar T>
@@ -14,8 +13,17 @@ public:
             point = std::make_unique<Point<T>>();
     }
 
-    Octagon(const Point<T>& center, const Point<T>& vertex) {
-        calculatePoints(center, vertex);
+    Octagon(const Point<T>& p1, const Point<T>& p2, const Point<T>& p3,
+            const Point<T>& p4, const Point<T>& p5, const Point<T>& p6,
+            const Point<T>& p7, const Point<T>& p8) {
+        points[0] = std::make_unique<Point<T>>(p1);
+        points[1] = std::make_unique<Point<T>>(p2);
+        points[2] = std::make_unique<Point<T>>(p3);
+        points[3] = std::make_unique<Point<T>>(p4);
+        points[4] = std::make_unique<Point<T>>(p5);
+        points[5] = std::make_unique<Point<T>>(p6);
+        points[6] = std::make_unique<Point<T>>(p7);
+        points[7] = std::make_unique<Point<T>>(p8);
     }
 
     Octagon(const Octagon& other) {
@@ -52,17 +60,20 @@ public:
     }
 
     operator double() const override {
-        T dx = points[0]->x() - Center().x();
-        T dy = points[0]->y() - Center().y();
-        T R = std::hypot(dx, dy);
-        return static_cast<double>(2.0 * (1.0 + std::sqrt(2.0)) * R * R);
+        double area = 0.0;
+        for (size_t i = 0; i < 8; ++i) {
+            size_t j = (i + 1) % 8;
+            area += static_cast<double>(points[i]->x() * points[j]->y());
+            area -= static_cast<double>(points[j]->x() * points[i]->y());
+        }
+        return std::abs(area) / 2.0;
     }
 
     bool operator==(const Figure<T>& other) const override {
-        const Octagon<T>* otherOct = dynamic_cast<const Octagon<T>*>(&other);
-        if (!otherOct) return false;
+        const Octagon<T>* oct = dynamic_cast<const Octagon<T>*>(&other);
+        if (!oct) return false;
         for (size_t i = 0; i < 8; ++i)
-            if (*(points[i]) != *(otherOct->points[i]))
+            if (*(points[i]) != *(oct->points[i]))
                 return false;
         return true;
     }
@@ -73,39 +84,19 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "Octagon: ";
-        for (const auto& p : points)
-            os << *p << " ";
+        os << "Octagon:";
+        for (const auto& p : points) os << " " << *p;
     }
 
     void read(std::istream& is) override {
-        Point<T> center, vertex;
-        std::cout << "Enter center: ";
-        is >> center >> vertex;
-        calculatePoints(center, vertex);
+        std::cout << "Enter 8 vertices (x1 y1 x2 y2 ... x8 y8): ";
+        for (size_t i = 0; i < 8; ++i) {
+            Point<T> p;
+            is >> p;
+            *points[i] = p;
+        }
     }
 
 private:
     std::array<std::unique_ptr<Point<T>>, 8> points;
-
-    void calculatePoints(const Point<T>& center, const Point<T>& vertex) {
-        T dx = vertex.x() - center.x();
-        T dy = vertex.y() - center.y();
-        T radius = std::hypot(dx, dy);
-
-        if (radius == T{0}) {
-            calculatePoints(Point<T>(T{0}, T{0}), Point<T>(T{1}, T{0}));
-            return;
-        }
-
-        constexpr long double PI_LD = 3.141592653589793238462643383279502884L;
-        const T PI = static_cast<T>(PI_LD);
-        T baseAngle = std::atan2(dy, dx);
-        for (size_t i = 0; i < 8; ++i) {
-            T angle = baseAngle + i * (T{2} * PI / T{8});
-            T x = center.x() + radius * std::cos(angle);
-            T y = center.y() + radius * std::sin(angle);
-            points[i] = std::make_unique<Point<T>>(x, y);
-        }
-    }
 };

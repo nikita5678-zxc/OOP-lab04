@@ -3,7 +3,6 @@
 #include "figure.h"
 #include <array>
 #include <cmath>
-#include <numbers>
 #include <iostream>
 
 template <Scalar T>
@@ -14,8 +13,10 @@ public:
             point = std::make_unique<Point<T>>();
     }
 
-    Triangle(const Point<T>& center, const Point<T>& vertex) {
-        calculatePoints(center, vertex);
+    Triangle(const Point<T>& p1, const Point<T>& p2, const Point<T>& p3) {
+        points[0] = std::make_unique<Point<T>>(p1);
+        points[1] = std::make_unique<Point<T>>(p2);
+        points[2] = std::make_unique<Point<T>>(p3);
     }
 
     Triangle(const Triangle& other) {
@@ -52,17 +53,18 @@ public:
     }
 
     operator double() const override {
-        T dx = points[0]->x() - Center().x();
-        T dy = points[0]->y() - Center().y();
-        T R = std::hypot(dx, dy);
-        return static_cast<double>(0.75 * std::sqrt(3.0) * R * R);
+        T x1 = points[0]->x(), y1 = points[0]->y();
+        T x2 = points[1]->x(), y2 = points[1]->y();
+        T x3 = points[2]->x(), y3 = points[2]->y();
+        T area = std::abs((x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1)) / 2;
+        return static_cast<double>(area);
     }
 
     bool operator==(const Figure<T>& other) const override {
-        const Triangle<T>* otherTri = dynamic_cast<const Triangle<T>*>(&other);
-        if (!otherTri) return false;
+        const Triangle<T>* tri = dynamic_cast<const Triangle<T>*>(&other);
+        if (!tri) return false;
         for (size_t i = 0; i < 3; ++i)
-            if (*(points[i]) != *(otherTri->points[i]))
+            if (*(points[i]) != *(tri->points[i]))
                 return false;
         return true;
     }
@@ -73,39 +75,18 @@ public:
 
 protected:
     void print(std::ostream& os) const override {
-        os << "Triangle: ";
-        for (const auto& p : points)
-            os << *p << " ";
+        os << "Triangle: " << *points[0] << " " << *points[1] << " " << *points[2];
     }
 
     void read(std::istream& is) override {
-        Point<T> center, vertex;
-        std::cout << "Enter center: ";
-        is >> center >> vertex;
-        calculatePoints(center, vertex);
+        Point<T> p1, p2, p3;
+        std::cout << "Enter three vertices (x1 y1 x2 y2 x3 y3): ";
+        is >> p1 >> p2 >> p3;
+        *points[0] = p1;
+        *points[1] = p2;
+        *points[2] = p3;
     }
 
 private:
     std::array<std::unique_ptr<Point<T>>, 3> points;
-
-    void calculatePoints(const Point<T>& center, const Point<T>& vertex) {
-        T dx = vertex.x() - center.x();
-        T dy = vertex.y() - center.y();
-        T radius = std::hypot(dx, dy);
-
-        if (radius == T{0}) {
-            calculatePoints(Point<T>(T{0}, T{0}), Point<T>(T{1}, T{0}));
-            return;
-        }
-
-        constexpr long double PI_LD = 3.141592653589793238462643383279502884L;
-        const T PI = static_cast<T>(PI_LD);
-        T baseAngle = std::atan2(dy, dx);
-        for (size_t i = 0; i < 3; ++i) {
-            T angle = baseAngle + i * (T{2} * PI / T{3});
-            T x = center.x() + radius * std::cos(angle);
-            T y = center.y() + radius * std::sin(angle);
-            points[i] = std::make_unique<Point<T>>(x, y);
-        }
-    }
 };
